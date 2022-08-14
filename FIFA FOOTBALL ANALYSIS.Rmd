@@ -1,0 +1,324 @@
+---
+title: "Fifa Football Analysis"
+author: "DEON S"
+date: "14/08/2022"
+output: html_document
+---
+
+#### Reading the csv file
+
+```{r}
+fifa <- read.csv("C:/Users/LENOVO/Dropbox/PC/Desktop/Project 2/fifa_cleaned.csv")
+```
+
+#### To view the imported csv file
+
+```{r}
+View(fifa)
+```
+
+### Into Data Cleaning
+#### To know the size of data
+
+```{r}
+dim(fifa)
+```
+
+#### summary statistics for all the columns of the data
+```{r}
+summary(fifa)
+str(fifa)
+```
+
+#### To check null values
+```{r}
+any(is.na(fifa))
+```
+
+#### To check the count of null values
+```{r}
+sum(is.na(fifa))
+```
+
+#### To get the specific column with null values
+```{r}
+sum(is.na(fifa$TotalCharges))
+```
+```{r}
+colSums(is.na(fifa))
+```
+
+#### To remove columns 
+```{r}
+fifa_1 <- fifa[-c(1,20,24,25,27:30,60:92)]
+```
+
+#### To remove the null values
+```{r}
+fifa_edit <- na.omit(fifa_1)
+```
+
+#### is there still a null value
+```{r}
+sum(is.na(fifa_edit))
+```
+
+#### To check null values
+```{r}
+any(is.na(fifa_edit))
+```
+
+#### Further more data pre-processing
+```{r}
+fifa_1 <- fifa[-c(23,25,26)]
+```
+
+#### to export clean dataset
+```{r}
+write.csv(fifa_edit, "C:/Users/LENOVO/Dropbox/PC/Desktop/Project 2/fifa_clean.csv")
+```
+
+---------------------------------------------------------------------------------------------------
+#### All the irrelevant data was cleaned and copied to a new csv file named "fifa_final" and further data analysis is done based on that.
+```{r}
+fifa_final<-read.csv("C:/Users/LENOVO/Dropbox/PC/Desktop/Project 2/fifa_final.csv")
+View(fifa_final)
+```
+
+```{r}
+dim(fifa_final)
+```
+
+#### To check the datatypes
+```{r}
+str(fifa_final)
+```
+#### loading necessory packages
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(heatmaply)
+library(ggcorrplot)
+library(devtools)
+library(easyGgplot2)
+library(caTools)
+library(ROCR) 
+library(leaps)
+```
+
+#summary statistics for all the columns of the data
+```{r}
+summary(fifa_final)
+str(fifa_final)
+```
+#To check for null values
+```{r}
+which(is.na(fifa_final))
+```
+
+#### numeric datatypes
+```{r}
+fifa_numeric<-fifa_edit[c('age', 'height_cm', 'weight_kgs', 'overall_rating', 'potential', 'value_euro', 'wage_euro', 'international_reputation.1.5.', 'weak_foot.1.5.', 'skill_moves.1.5.', 'club_rating', 'crossing', 'finishing', 'heading_accuracy', 'short_passing', 'volleys', 'dribbling', 'curve', 'freekick_accuracy', 'long_passing', 'ball_control', 'acceleration', 'sprint_speed', 'agility', 'reactions', 'balance', 'shot_power', 'jumping', 'stamina', 'strength', 'long_shots', 'aggression', 'interceptions', 'positioning', 'vision', 'penalties', 'composure', 'marking', 'standing_tackle', 'sliding_tackle')]
+
+```
+
+#### categorical datatypes
+```{r}
+fifa_categorical<-fifa_edit[c('name', 'full_name', 'birth_date', 'positions', 'nationality', 'preferred_foot', 'work_rate', 'body_type', 'club_team', 'club_position', 'contract_end_year')]
+
+```
+
+#### EDA ***********************************************************
+
+#### count of height of the players
+```{r}
+ggplot(fifa_final, aes(x = height_cm)) +
+  geom_bar(
+    
+  )
+
+```
+
+#### Heatmap of correlation between the numeric variables
+```{r}
+ggcorrplot::ggcorrplot(cor(fifa_numeric))
+```
+
+#### To check the unique body types
+```{r}
+unique(fifa_final[c("body_type")])
+
+```
+#### scatterplot of wage in euro vs height of the player
+```{r}
+ggplot2.scatterplot(data=fifa_final, xName='wage_euro',yName='height_cm', 
+                    groupName='body_type', mapping=aes(size = body_type),
+                    backgroundColor="white", setColorByGroupName=TRUE) 
+```
+
+#### scatterplot of value in euro vs height of the player
+```{r}
+ggplot2.scatterplot(data=fifa_final, xName='value_euro',yName='height_cm', 
+                    groupName='body_type', mapping=aes(size = body_type),
+                    backgroundColor="white", setColorByGroupName=TRUE) 
+```
+
+#### chi-square test to know whether two categorical variables are dependent or not
+```{r}
+chisq.test(fifa_final$positions,fifa_final$preferred_foot)
+```
+```{r}
+value_df <- fifa_final %>% dplyr::select(-name, -nationality, -club_team, -body_type, 
+                                            -club_position)
+
+value_df
+```
+
+#### player rating vs value in euro
+```{r}
+fifa_final %>% ggplot(aes(x=overall_rating,y=value_euro)) + geom_point() + geom_jitter() +
+  labs(x = "player rating", y = "player value (euro)", 
+       title = "Plot of player rating vs player value")
+```
+
+#### Histogram of height of the players
+```{r}
+hist(fifa_final$height_cm,xlab='Height',ylab='Frequency',main='Height of the players')
+```
+
+#### To check the unique positions
+```{r}
+df_position <- unique(fifa_final[c("positions")])
+```
+
+```{r}
+View(df_position)
+```
+
+#### display the counts of df_position
+```{r}
+n_distinct(fifa_final$positions)
+```
+##### contains 204 unique postions
+
+#### Make the column "Positions" have only one data per row
+```{r}
+fifa_final$positions <- gsub(" ", "", substr(fifa_final$positions,1,3))
+fifa_final$positions <- gsub(",", "", substr(fifa_final$positions,1,3))
+```
+
+#### to check the unique Positions again
+```{r}
+df_position <- unique(fifa_final[c("positions")])
+```
+
+```{r}
+View(df_position)
+```
+
+```{r}
+n_distinct(fifa_final$positions)
+```
+
+#### Group the positions in GK, DEF, MID,FWD
+```{r}
+x <- as.factor(fifa_final$positions)
+levels(x) <- list(GK =c("GK"),
+                  DEF =c("LWB","LB","CB","RB","RWB"),
+                  MID = c("LW","LM","CDM","CM","CAM","RM","RW"),
+                  FWD = c("CF","ST"))
+```
+
+```{r}
+df <-mutate(fifa_final,position = x)
+```
+
+#### viewing the data again
+```{r}
+View(x)
+```
+
+#### distribution of players based on the age
+```{r}
+g_age <- ggplot(data = df, aes(age))
+g_age + 
+  geom_histogram(col="orange", aes(fill = ..count..)) + ggtitle("Distribution based on Age")
+```
+
+#### relation between the Age of the players and their general playing position.
+```{r}
+g_age + 
+  geom_density(col="orange", aes(fill = position), alpha=0.5) + facet_grid(.~position) + 
+  ggtitle("Distribution based on Age and Position")
+```
+#### players overall rating
+```{r}
+g_overall <- ggplot(data = df, aes(overall_rating))
+g_overall + 
+  geom_histogram(col="orange", aes(fill = ..count..)) + ggtitle("Distribution based on Overall Rating")
+```
+#### Using the quantile function in R to obtain the top 1 % count of the player Value and Wage 
+```{r}
+top_1_percent_wage   <- quantile(df$wage_euro, probs=0.99)
+filtered_wage <- filter(df, wage_euro > top_1_percent_wage)
+```
+
+```{r}
+g_value <- ggplot(filtered_wage, aes(wage_euro))
+g_value + 
+  geom_histogram(aes(fill=..count..)) + 
+  ggtitle("Distribution of top 1% value")
+```
+
+A large number of players are worth 25,000,000 with the count decreasing sharply as the price increases.
+
+```{r}
+top_1_percent_value   <- quantile(df$value_euro, probs=0.99)
+filtered_value <- filter(df, value_euro > top_1_percent_value)
+```
+
+```{r}
+g_wage <- ggplot(filtered_value, aes(value_euro))
+g_wage + 
+  geom_histogram(aes(fill=..count..)) + 
+  ggtitle("Distribution of top 1% Value")
+```
+### Building the Multiple Regression model
+
+#### # overall rating vs. value
+```{r}
+fit_overall <- lm(log(value_euro) ~ overall_rating, data = fifa_final)
+summary(fit_overall)
+```
+ The model does not give a good accuracy. Therefore we proceed multiple regression with other set of variables.
+ 
+#### potential vs. value
+```{r}
+fit_potential <- lm(log(value_euro) ~ potential, data = fifa_final)
+summary(fit_potential)
+
+fifa_final %>% ggplot(aes(x=potential,y=log(value_euro))) +
+  geom_point() + geom_smooth(method='lm', formula= y~x) +
+  labs(x="player potential", title = "Plot of potential vs. player value")
+```
+
+#### weekly wage_eur vs. value
+```{r}
+fifa_final %>% ggplot(aes(x=wage_euro,y=value_euro)) +
+  geom_point() + geom_smooth(method='lm', formula= y~x)
+```
+
+#### multiple regression model by keeping value_euro as the dependent variable
+```{r}
+lm.fit.value = lm(value_euro ~
+                    age+overall_rating+potential+wage_euro+
+                    international_reputation.1.5.+
+                    stamina+sliding_tackle+standing_tackle+height_cm, data = fifa_final)
+summary(lm.fit.value)
+```
+
+Our multiple regression model gave us a accuracy of 0.79 which is quite good.
+
+
